@@ -1,0 +1,82 @@
+--- labirintus.c	2024-11-22 17:34:20.858469344 +0300
++++ labirintus_v1.c	2024-11-22 18:06:19.714447002 +0300
+@@ -2,7 +2,6 @@
+ #include <stdlib.h>
+ #include <time.h>
+ 
+-#define SIZE 6
+ #define DIRS_N 4
+ 
+ typedef struct {
+@@ -12,11 +11,11 @@
+ 
+ Point dirs[] = {{-2, 0}, {0, 2}, {2, 0}, {0, -2}};
+ 
+-int CanMove(char lab[SIZE][SIZE], int x, int y) {
+-    return 0 < x && x < SIZE && 0 < y && y < SIZE && lab[x][y] == '#';
++int CanMove(char **lab, int size, int x, int y) {
++    return 0 < x && x < size && 0 < y && y < size && lab[x][y] == '#';
+ }
+ 
+-void MakePassages(char lab[SIZE][SIZE], int x, int y, int depth) {
++void MakePassages(char **lab, int size, int x, int y, int depth) {
+     lab[x][y] = '.';
+ 
+     int tmp = rand();
+@@ -26,33 +25,47 @@
+         int x_dif = dirs[idxs[i]].x;
+         int y_dif = dirs[idxs[i]].y;
+ 
+-        if (CanMove(lab, x + x_dif, y + y_dif)) {
++        if (CanMove(lab, size, x + x_dif, y + y_dif)) {
+             lab[x + x_dif / 2][y + y_dif / 2] = '.';
+-            MakePassages(lab, x + x_dif, y + y_dif, depth + 1);
++            MakePassages(lab, size, x + x_dif, y + y_dif, depth + 1);
+         }
+     }
+ }
+ 
+ int main(int argc, char **argv) {
++    if (argc != 2) {
++        printf("USAGE: %s [sz]\n", argv[0]);
++        return 1;
++    }
++
+     srand(time(NULL));
+ 
+-    int size = SIZE * 2 + 1;
+-    char lab[size][size];
++    int size = atoi(argv[1]) * 2 + 1;
++
++    char **lab = malloc(size * sizeof(char*));
++    for (int i = 0; i < size; i++) {
++        lab[i] = malloc(size * sizeof(char));
++    }
+ 
+-    for (int i = 0; i < SIZE; i++) {
+-        for (int j = 0; j < SIZE; j++) {
++    for (int i = 0; i < size; i++) {
++        for (int j = 0; j < size; j++) {
+             lab[i][j] = '#';
+         }
+     }
+ 
+-    MakePassages(lab, 1, 1, 0);
++    MakePassages(lab, size, 1, 1, 0);
+ 
+-    for (int i = 0; i < SIZE; i++) {
+-        for (int j = 0; j < SIZE; j++) {
++    for (int i = 0; i < size; i++) {
++        for (int j = 0; j < size; j++) {
+             printf("%c", lab[i][j]);
+         }
+         printf("\n");
+     }
+ 
++    for (int i = 0; i < size; i++) {
++        free(lab[i]);
++    }
++    free(lab);
++
+     return 0;
+ }

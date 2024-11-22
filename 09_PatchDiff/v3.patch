@@ -1,0 +1,89 @@
+--- labirintus.c	2024-11-22 17:34:20.858469344 +0300
++++ labirintus_v3.c	2024-11-22 18:06:58.328919557 +0300
+@@ -2,7 +2,6 @@
+ #include <stdlib.h>
+ #include <time.h>
+ 
+-#define SIZE 6
+ #define DIRS_N 4
+ 
+ typedef struct {
+@@ -12,12 +11,12 @@
+ 
+ Point dirs[] = {{-2, 0}, {0, 2}, {2, 0}, {0, -2}};
+ 
+-int CanMove(char lab[SIZE][SIZE], int x, int y) {
+-    return 0 < x && x < SIZE && 0 < y && y < SIZE && lab[x][y] == '#';
++int CanMove(char **lab, int size, int x, int y, char pass) {
++    return 0 < x && x < size && 0 < y && y < size && lab[x][y] != pass;
+ }
+ 
+-void MakePassages(char lab[SIZE][SIZE], int x, int y, int depth) {
+-    lab[x][y] = '.';
++void MakePassages(char **lab, int size, int x, int y, char pass, int depth) {
++    lab[x][y] = pass;
+ 
+     int tmp = rand();
+     int idxs[] = {tmp % DIRS_N, (tmp + 1) % DIRS_N, (tmp + 2) % DIRS_N, (tmp + 3) % DIRS_N};
+@@ -26,33 +25,49 @@
+         int x_dif = dirs[idxs[i]].x;
+         int y_dif = dirs[idxs[i]].y;
+ 
+-        if (CanMove(lab, x + x_dif, y + y_dif)) {
+-            lab[x + x_dif / 2][y + y_dif / 2] = '.';
+-            MakePassages(lab, x + x_dif, y + y_dif, depth + 1);
++        if (CanMove(lab, size, x + x_dif, y + y_dif, pass)) {
++            lab[x + x_dif / 2][y + y_dif / 2] = pass;
++            MakePassages(lab, size, x + x_dif, y + y_dif, pass, depth + 1);
+         }
+     }
+ }
+ 
+ int main(int argc, char **argv) {
+-    srand(time(NULL));
++    if (argc != 4) {
++        printf("USAGE: %s [rand_init] [symbols] [sz]\n", argv[0]);
++        return 1;
++    }
++
++    srand(atoi(argv[1]));
+ 
+-    int size = SIZE * 2 + 1;
+-    char lab[size][size];
++    int size = atoi(argv[3]) * 2 + 1;
++    char pass = argv[2][0];
++    char wall = argv[2][1];
++
++    char **lab = malloc(size * sizeof(char*));
++    for (int i = 0; i < size; i++) {
++        lab[i] = malloc(size * sizeof(char));
++    }
+ 
+-    for (int i = 0; i < SIZE; i++) {
+-        for (int j = 0; j < SIZE; j++) {
+-            lab[i][j] = '#';
++    for (int i = 0; i < size; i++) {
++        for (int j = 0; j < size; j++) {
++            lab[i][j] = wall;
+         }
+     }
+ 
+-    MakePassages(lab, 1, 1, 0);
++    MakePassages(lab, size, 1, 1, pass, 0);
+ 
+-    for (int i = 0; i < SIZE; i++) {
+-        for (int j = 0; j < SIZE; j++) {
++    for (int i = 0; i < size; i++) {
++        for (int j = 0; j < size; j++) {
+             printf("%c", lab[i][j]);
+         }
+         printf("\n");
+     }
+ 
++    for (int i = 0; i < size; i++) {
++        free(lab[i]);
++    }
++    free(lab);
++
+     return 0;
+ }
